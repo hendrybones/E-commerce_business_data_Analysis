@@ -114,4 +114,55 @@ SELECT *FROM Brazilian_Ecommerce_Olisit.dbo.olist_orders_dataset$
 
 /*
 How to create a CTE 
+use CTE table to find the average orders made in the entire period
+BY EACH PRODUCT
 */
+WITH orders(PRODUCT_CATEGORY_NAME,CUSTOMER_CITY,Number_of_orders)
+AS
+(
+SELECT PRODUCT_CATEGORY_NAME,CUSTOMER_CITY,COUNT(ord.ORDER_ID) as Number_of_orders FROM Brazilian_Ecommerce_Olisit.dbo.olist_order_items_dataset$ item
+INNER JOIN Brazilian_Ecommerce_Olisit.dbo.olist_orders_dataset$ AS ord ON ord.order_id=item.order_id
+INNER JOIN Brazilian_Ecommerce_Olisit.dbo.olist_products_dataset$ AS product ON product.product_id=item.product_id
+INNER JOIN Brazilian_Ecommerce_Olisit.dbo.olist_customers_dataset$ AS cust ON cust.customer_id=ord.customer_id
+GROUP BY ord.ORDER_ID,PRODUCT_CATEGORY_NAME,customer_city
+)
+select PRODUCT_CATEGORY_NAME,AVG(Number_of_orders) AS AVERAGE_ORDERS from orders
+GROUP BY PRODUCT_CATEGORY_NAME
+ORDER BY AVERAGE_ORDERS DESC
+
+/*
+CUSTOMER WITH THE MOST ORDERS AND THE CITY THAT ORDER CAME FROM
+*/
+WITH CUSTOMER (CUSTOMER_ID,ORDER_ID,CUSTOMER_CITY,Number_Of_Orders_Per_Customer)
+AS
+(
+SELECT cust.customer_id,ORDER_ID,CUSTOMER_CITY,COUNT(order_id) as NUmber_Of_Orders_Per_Customer
+FROM Brazilian_Ecommerce_Olisit.dbo.olist_orders_dataset$ AS ord
+JOIN Brazilian_Ecommerce_Olisit.dbo.olist_customers_dataset$ AS cust on cust.customer_id=ord.customer_id
+Group by cust.CUSTOMER_ID,ORDER_ID,CUSTOMER_CITY
+)
+select customer_id,Number_Of_Orders_Per_Customer from CUSTOMER
+
+/*
+CREATING VIEWS 
+*/
+CREATE VIEW CUSTOMER AS
+SELECT cust.customer_id,ORDER_ID,CUSTOMER_CITY,COUNT(order_id) as NUmber_Of_Orders_Per_Customer
+FROM Brazilian_Ecommerce_Olisit.dbo.olist_orders_dataset$ AS ord
+JOIN Brazilian_Ecommerce_Olisit.dbo.olist_customers_dataset$ AS cust on cust.customer_id=ord.customer_id
+Group by cust.CUSTOMER_ID,ORDER_ID,CUSTOMER_CITY
+
+/*
+REVENUE AND PAYMENT
+*/
+SELECT * FROM Brazilian_Ecommerce_Olisit.dbo.olist_order_payments_dataset$ 
+
+/*
+How much revenue does each product generate from each city
+*/
+SELECT PRODUCT_CATEGORY_NAME,CUSTOMER_ID,PAYMENT_VALUE
+FROM Brazilian_Ecommerce_Olisit.dbo.olist_products_dataset$ AS PRO
+INNER JOIN Brazilian_Ecommerce_Olisit.dbo.olist_order_items_dataset$ AS item on item.product_id=pro.product_id
+INNER JOIN  Brazilian_Ecommerce_Olisit.dbo.olist_customers_dataset$ AS cust on item.product_id=PRO.product_id
+INNER JOIN Brazilian_Ecommerce_Olisit.dbo.olist_order_payments_dataset$ AS PAY on pay.order_id=item.order_id
+order by PAYMENT_VALUE desc
